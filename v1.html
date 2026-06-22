@@ -317,7 +317,7 @@
                                     </div>
                                 </div>
 
-                                <!-- 2. Editor Pesan -->
+                               <!-- 2. Editor Pesan -->
                                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                                     <div class="mb-5">
                                         <h3 class="font-bold text-slate-800 text-sm mb-2 flex items-center gap-2"><i class="ph-fill ph-link text-blue-500"></i> URL Media / Lampiran (Opsional)</h3>
@@ -345,7 +345,6 @@
                                         <textarea id="bc-editor" class="w-full h-44 p-4 text-sm outline-none resize-y custom-scrollbar leading-relaxed" placeholder="Halo [Nama], kami sedang ada promo spesial nih..."></textarea>
                                     </div>
                                 </div>
-                            </div>
 
                             <!-- Panel Kanan: Metode & Eksekusi -->
                             <div class="w-full lg:w-[400px] flex-shrink-0 flex flex-col gap-5">
@@ -410,7 +409,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                         </div>
                     </div>
                 </div>
 
@@ -438,7 +437,7 @@
                                     <h3 class="font-bold text-slate-800 text-sm">Timeline Pesan</h3>
                                     <div class="flex gap-2">
                                         <button onclick="openSequenceTemplateModal()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold px-3 py-1.5 rounded-lg transition shadow-sm border border-blue-100 flex items-center gap-1.5">
-                                            <i class="ph-fill ph-magic-wand"></i> Pilih Template
+                                            <i class="ph-fill ph-magic-wand"></i> Load Template
                                         </button>
                                         <button onclick="addSequenceItem()" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-md">+ Tambah Jadwal</button>
                                     </div>
@@ -1169,10 +1168,10 @@
         let savedForms = JSON.parse(localStorage.getItem('imersfow_forms')) || [];
         let currentStep = 1; 
         
-        // VARIABEL TEMPLATE ENGINE HIBRIDA
+        // VARIABEL TEMPLATE ENGINE HIBRIDA & CRM
         let availableTemplates = {};           
         let availableSequenceTemplates = {};   
-        let availableBroadcastTemplates = {};  
+        let availableBroadcastTemplates = {};  // <-- MANGKOK BARU BUAT BROADCAST
         let currentModalType = 'form';         
         let currentCategoryFilter = 'Semua';
         
@@ -1231,20 +1230,22 @@
         }
 
         function toggleColorMode(target) {
-            const type = document.querySelector('input[name="' + target + '_type"]:checked').value; 
-            const container = document.getElementById(target + '-color-inputs');
+            const type = document.querySelector(`input[name="${target}_type"]:checked`).value; 
+            const container = document.getElementById(`${target}-color-inputs`);
             
             if (type === 'solid') { 
-                container.innerHTML = '<div class="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-xl">' +
-                        '<input type="color" id="' + target + '-c1" value="' + (target==='header'?'#1e3a8a':'#2563eb') + '" oninput="buildColors(\'' + target + '\')" class="w-10 h-10 p-0 border-0 rounded cursor-pointer">' +
-                        '<span class="text-xs font-bold text-slate-500">Pilih Warna</span>' +
-                    '</div>'; 
+                container.innerHTML = `
+                    <div class="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                        <input type="color" id="${target}-c1" value="${target==='header'?'#1e3a8a':'#2563eb'}" oninput="buildColors('${target}')" class="w-10 h-10 p-0 border-0 rounded cursor-pointer">
+                        <span class="text-xs font-bold text-slate-500">Pilih Warna</span>
+                    </div>`; 
             } else { 
-                container.innerHTML = '<div class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl">' +
-                        '<input type="color" id="' + target + '-c1" value="' + (target==='header'?'#0ea5e9':'#60a5fa') + '" oninput="buildColors(\'' + target + '\')" class="w-10 h-10 p-0 border-0 rounded cursor-pointer">' +
-                        '<i class="ph-bold ph-arrow-right text-slate-400"></i>' +
-                        '<input type="color" id="' + target + '-c2" value="' + (target==='header'?'#1e3a8a':'#2563eb') + '" oninput="buildColors(\'' + target + '\')" class="w-10 h-10 p-0 border-0 rounded cursor-pointer">' +
-                    '</div>'; 
+                container.innerHTML = `
+                    <div class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                        <input type="color" id="${target}-c1" value="${target==='header'?'#0ea5e9':'#60a5fa'}" oninput="buildColors('${target}')" class="w-10 h-10 p-0 border-0 rounded cursor-pointer">
+                        <i class="ph-bold ph-arrow-right text-slate-400"></i>
+                        <input type="color" id="${target}-c2" value="${target==='header'?'#1e3a8a':'#2563eb'}" oninput="buildColors('${target}')" class="w-10 h-10 p-0 border-0 rounded cursor-pointer">
+                    </div>`; 
             }
             buildColors(target); 
             if(currentStep === 1) renderCanvas();
@@ -1252,36 +1253,38 @@
 
         function toggleTextColorMode(target) {
             const radioName = target === 'title' ? 'title_color_type' : 'cta_text_type';
-            const checkedRadio = document.querySelector('input[name="' + radioName + '"]:checked');
+            const checkedRadio = document.querySelector(`input[name="${radioName}"]:checked`);
             const type = checkedRadio ? checkedRadio.value : 'solid';
-            const container = document.getElementById(target + '-color-inputs');
+            const container = document.getElementById(`${target}-color-inputs`);
             
             let c1Val = target === 'title' ? (formConfig.titleColor1 || '#ffffff') : (formConfig.ctaTextColor1 || '#ffffff');
             let c2Val = target === 'title' ? (formConfig.titleColor2 || '#fef08a') : (formConfig.ctaTextColor2 || '#fef08a');
 
             if (type === 'solid') { 
-                container.innerHTML = '<div class="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-xl">' +
-                        '<input type="color" id="' + target + '-c1" value="' + c1Val + '" oninput="updateConfig()" class="w-10 h-10 p-0 border-0 rounded cursor-pointer shadow-sm">' +
-                        '<span class="text-xs font-bold text-slate-500">Pilih Warna</span>' +
-                    '</div>'; 
+                container.innerHTML = `
+                    <div class="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                        <input type="color" id="${target}-c1" value="${c1Val}" oninput="updateConfig()" class="w-10 h-10 p-0 border-0 rounded cursor-pointer shadow-sm">
+                        <span class="text-xs font-bold text-slate-500">Pilih Warna</span>
+                    </div>`; 
             } else { 
-                container.innerHTML = '<div class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl">' +
-                        '<input type="color" id="' + target + '-c1" value="' + c1Val + '" oninput="updateConfig()" class="w-10 h-10 p-0 border-0 rounded cursor-pointer shadow-sm">' +
-                        '<i class="ph-bold ph-arrow-right text-slate-400"></i>' +
-                        '<input type="color" id="' + target + '-c2" value="' + c2Val + '" oninput="updateConfig()" class="w-10 h-10 p-0 border-0 rounded cursor-pointer shadow-sm">' +
-                    '</div>'; 
+                container.innerHTML = `
+                    <div class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                        <input type="color" id="${target}-c1" value="${c1Val}" oninput="updateConfig()" class="w-10 h-10 p-0 border-0 rounded cursor-pointer shadow-sm">
+                        <i class="ph-bold ph-arrow-right text-slate-400"></i>
+                        <input type="color" id="${target}-c2" value="${c2Val}" oninput="updateConfig()" class="w-10 h-10 p-0 border-0 rounded cursor-pointer shadow-sm">
+                    </div>`; 
             }
             updateConfig(); 
         }
 
         function buildColors(target) {
-            const type = document.querySelector('input[name="' + target + '_type"]:checked').value; 
+            const type = document.querySelector(`input[name="${target}_type"]:checked`).value; 
             let finalColor = '';
             
             if (type === 'solid') { 
-                finalColor = document.getElementById(target + '-c1').value; 
+                finalColor = document.getElementById(`${target}-c1`).value; 
             } else { 
-                finalColor = 'linear-gradient(135deg, ' + document.getElementById(target + '-c1').value + ', ' + document.getElementById(target + '-c2').value + ')'; 
+                finalColor = `linear-gradient(135deg, ${document.getElementById(`${target}-c1`).value}, ${document.getElementById(`${target}-c2`).value})`; 
             }
             
             if(target === 'header') formConfig.headerBg = finalColor; 
@@ -1518,7 +1521,7 @@
             tbody.innerHTML = '';
             
             if(savedForms.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-500 font-medium">Belum ada form yang tersimpan. Ayo buat form pertama Anda!</td></tr>'; 
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-500 font-medium">Belum ada form yang tersimpan. Ayo buat form pertama Anda!</td></tr>`; 
                 return;
             }
             
@@ -2100,27 +2103,27 @@
             const formId = document.getElementById('seq-form-target').value;
             const container = document.getElementById('seq-variable-container');
             
-            let html = '<span class="text-[10px] font-bold text-slate-400 uppercase">Variabel:</span>';
+            let html = `<span class="text-[10px] font-bold text-slate-400 uppercase">Variabel:</span>`;
             
             if (!formId) {
-                container.innerHTML = html + '<span class="text-xs text-slate-400 italic">Pilih form target terlebih dahulu</span>';
+                container.innerHTML = html + `<span class="text-xs text-slate-400 italic">Pilih form target terlebih dahulu</span>`;
                 return;
             }
 
             const form = savedForms.find(f => f.id === formId);
             if (!form || !form.fields) {
-                container.innerHTML = html + '<span class="text-xs text-slate-400 italic">Form tidak memiliki data field yang valid</span>';
+                container.innerHTML = html + `<span class="text-xs text-slate-400 italic">Form tidak memiliki data field yang valid</span>`;
                 return;
             }
 
             const colors = ['blue', 'emerald', 'amber', 'purple', 'rose', 'teal'];
             form.fields.forEach((f, idx) => {
                 const c = colors[idx % colors.length];
-                html += '<button onclick="insertVar(\'[' + f.label + ']\')" class="text-xs bg-' + c + '-50 text-' + c + '-600 hover:bg-' + c + '-100 font-bold px-2.5 py-1.5 rounded-lg border border-' + c + '-100 transition max-w-[150px] truncate" title="[' + f.label + ']">[' + f.label + ']</button>';
+                html += `<button onclick="insertVar('[${f.label}]')" class="text-xs bg-${c}-50 text-${c}-600 hover:bg-${c}-100 font-bold px-2.5 py-1.5 rounded-lg border border-${c}-100 transition max-w-[150px] truncate" title="[${f.label}]">[${f.label}]</button>`;
             });
 
             if (form.hasCalc) {
-                html += '<button onclick="insertVar(\'[Total_Tagihan]\')" class="text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold px-2.5 py-1.5 rounded-lg border border-slate-300 transition shadow-sm">[Total_Tagihan]</button>';
+                html += `<button onclick="insertVar('[Total_Tagihan]')" class="text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold px-2.5 py-1.5 rounded-lg border border-slate-300 transition shadow-sm">[Total_Tagihan]</button>`;
             }
 
             container.innerHTML = html;
@@ -2295,6 +2298,33 @@
         // =========================================================================
         // TEMPLATE ENGINE HIBRIDA LOGIC
         // =========================================================================
+        async function initTemplateEngine() {
+            const grid = document.getElementById('template-grid');
+            grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-500"><i class="ph-bold ph-spinner animate-spin text-3xl mb-3 text-blue-500"></i><p>Menarik data template dari server...</p></div>';
+            
+            try {
+                const resultForm = await fetchWithBackoff(MASTER_SCRIPT_URL + "?action=get_templates");
+                if(resultForm && resultForm.status === 'success') {
+                    availableTemplates = resultForm.data;
+                }
+                
+                const resultSeq = await fetchWithBackoff(MASTER_SCRIPT_URL + "?action=get_sequence_templates");
+                if(resultSeq && resultSeq.status === 'success') {
+                    availableSequenceTemplates = resultSeq.data;
+                }
+                
+                if(Object.keys(availableTemplates).length > 0) {
+                    renderCategorySidebar();
+                    filterTemplates('Semua');
+                } else {
+                    showTemplateError("Belum ada template di Database Master.");
+                }
+            } catch (error) {
+                console.warn("Fetch Gagal. Detail:", error.message);
+                showTemplateError("Gagal mengambil data! Pastikan Script URL benar dan bisa diakses.");
+            }
+        }
+
         function openTemplateModal() { 
             currentModalType = 'form';
             document.getElementById('template-modal-title').innerText = "Pilih Template Form";
@@ -2541,17 +2571,17 @@
             document.getElementById('cfg-btn-text').value = formConfig.btnText; 
             document.getElementById('cfg-logo').value = formConfig.logoUrl;
             
-            const displayModeRadio = document.querySelector('input[name="displayMode"][value="' + formConfig.displayMode + '"]');
+            const displayModeRadio = document.querySelector(`input[name="displayMode"][value="${formConfig.displayMode}"]`);
             if (displayModeRadio) displayModeRadio.checked = true;
             
             document.getElementById('cfg-trust-toggle').checked = formConfig.trustBadge; 
             document.getElementById('cfg-trust-title').value = formConfig.trustTitle; 
             document.getElementById('cfg-trust-desc').value = formConfig.trustDesc;
             
-            const titleColorRadio = document.querySelector('input[name="title_color_type"][value="' + formConfig.titleColorType + '"]');
+            const titleColorRadio = document.querySelector(`input[name="title_color_type"][value="${formConfig.titleColorType}"]`);
             if (titleColorRadio) titleColorRadio.checked = true;
             
-            const ctaTextRadio = document.querySelector('input[name="cta_text_type"][value="' + formConfig.ctaTextColorType + '"]');
+            const ctaTextRadio = document.querySelector(`input[name="cta_text_type"][value="${formConfig.ctaTextColorType}"]`);
             if (ctaTextRadio) ctaTextRadio.checked = true;
             
             document.getElementById('cfg-pixel-toggle').checked = formConfig.enablePixel;
@@ -2592,6 +2622,236 @@
 
             switchTab('builder'); 
             goToStep(1);
+        }
+
+        // =========================================================================
+        // FORM BUILDER LOGIC
+        // =========================================================================
+        function goToStep(step) {
+            currentStep = step; 
+            document.getElementById('progress-bar').style.width = ((step - 1) / 3) * 100 + '%';
+            
+            document.querySelectorAll('.step-btn').forEach(btn => {
+                const s = parseInt(btn.getAttribute('data-step')); 
+                const circle = btn.querySelector('.step-circle');
+                
+                if (s <= step) { 
+                    circle.classList.add('bg-rose-500', 'text-white', 'border-rose-500'); 
+                    circle.classList.remove('bg-white', 'text-slate-400', 'border-slate-300'); 
+                } else { 
+                    circle.classList.remove('bg-rose-500', 'text-white', 'border-rose-500'); 
+                    circle.classList.add('bg-white', 'text-slate-400', 'border-slate-300'); 
+                }
+            });
+            
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('step-' + i);
+                if (i === step) { 
+                    el.style.transform = 'translateX(0)'; 
+                    el.style.opacity = '1'; 
+                    el.style.pointerEvents = 'auto'; 
+                    el.style.zIndex = '10'; 
+                } else if (i < step) { 
+                    el.style.transform = 'translateX(-100%)'; 
+                    el.style.opacity = '0'; 
+                    el.style.pointerEvents = 'none'; 
+                    el.style.zIndex = '0'; 
+                } else { 
+                    el.style.transform = 'translateX(100%)'; 
+                    el.style.opacity = '0'; 
+                    el.style.pointerEvents = 'none'; 
+                    el.style.zIndex = '0'; 
+                }
+            }
+            
+            if(step === 2) renderCanvas(); 
+            if(step === 3) renderPreview(); 
+            if(step === 4) generateCode();
+        }
+
+        function generateId() { 
+            return 'f_' + Math.random().toString(36).substr(2, 6); 
+        }
+        
+        function getFieldLabelText(type) { 
+            const dict = { 
+                'text':'Teks Pendek', 'tel':'No. WhatsApp', 'email':'Alamat Email', 
+                'number':'Angka/Qty', 'textarea':'Alamat Lengkap', 'select':'Pilih Dropdown', 
+                'date':'Tanggal', 'time':'Waktu', 'radio':'Pilihan Tunggal', 'checkbox':'Pilihan Banyak' 
+            }; 
+            return dict[type] || 'Field Baru'; 
+        }
+
+        function addField(type) {
+            let field = { 
+                id: generateId(), 
+                type: type, 
+                label: getFieldLabelText(type), 
+                required: false, 
+                placeholder: '' 
+            };
+            
+            if(['select', 'radio', 'checkbox'].includes(type)) {
+                field.options = 'Opsi A, Opsi B, Opsi C';
+            }
+            
+            formFields.push(field); 
+            renderCanvas();
+            
+            setTimeout(() => { 
+                const wrap = document.getElementById('step-2').querySelector('.flex-1'); 
+                wrap.scrollTo({ top: wrap.scrollHeight, behavior: 'smooth' }); 
+            }, 100);
+        }
+
+        function removeField(id) { 
+            formFields = formFields.filter(f => f.id !== id); 
+            renderCanvas(); 
+        }
+        
+        function updateField(id, key, value) { 
+            const field = formFields.find(f => f.id === id); 
+            if(field) { 
+                if(key === 'required') {
+                    field[key] = value === 'true'; 
+                } else {
+                    field[key] = value; 
+                }
+            } 
+            if(key === 'options') {
+                renderCanvas(); 
+            }
+        }
+
+        function renderCanvas() {
+            document.getElementById('canvas-header').style.background = formConfig.headerBg; 
+            document.getElementById('canvas-btn').style.background = formConfig.ctaBg;
+            
+            const titleEl = document.getElementById('canvas-title');
+            titleEl.innerText = formConfig.title;
+            if (formConfig.titleColorType === 'gradient') {
+                titleEl.style.background = `linear-gradient(135deg, ${formConfig.titleColor1}, ${formConfig.titleColor2})`;
+                titleEl.style.webkitBackgroundClip = 'text';
+                titleEl.style.webkitTextFillColor = 'transparent';
+                titleEl.style.color = 'transparent';
+            } else {
+                titleEl.style.background = 'none';
+                titleEl.style.webkitBackgroundClip = 'initial';
+                titleEl.style.webkitTextFillColor = 'initial';
+                titleEl.style.color = formConfig.titleColor1 || '#ffffff';
+            }
+
+            const ctaEl = document.getElementById('canvas-btn');
+            if (formConfig.ctaTextColorType === 'gradient') {
+                ctaEl.innerHTML = `<span style="background: linear-gradient(135deg, ${formConfig.ctaTextColor1}, ${formConfig.ctaTextColor2}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">${formConfig.btnText}</span>`;
+            } else {
+                ctaEl.innerHTML = `<span style="color: ${formConfig.ctaTextColor1 || '#ffffff'};">${formConfig.btnText}</span>`;
+            }
+            
+            const logoEl = document.getElementById('canvas-logo'); 
+            if(formConfig.logoUrl) { 
+                logoEl.src = formConfig.logoUrl; 
+                logoEl.style.display = 'block'; 
+            } else { 
+                logoEl.style.display = 'none'; 
+            }
+            
+            const themeHex = getThemeColor(); 
+            const themeRgb = hexToRgb(themeHex);
+            
+            const trustEl = document.getElementById('canvas-trust'); 
+            if(formConfig.trustBadge) { 
+                trustEl.style.display = 'flex'; 
+                trustEl.style.backgroundColor = `rgba(${themeRgb}, 0.08)`; 
+                trustEl.style.borderColor = `rgba(${themeRgb}, 0.2)`; 
+                document.getElementById('canvas-trust-title').style.color = themeHex; 
+                document.getElementById('canvas-trust-icon').style.color = themeHex; 
+                document.getElementById('canvas-trust-title').innerText = formConfig.trustTitle; 
+                document.getElementById('canvas-trust-desc').innerText = formConfig.trustDesc; 
+            } else { 
+                trustEl.style.display = 'none'; 
+            }
+            
+            const timerWrapEl = document.getElementById('canvas-timer-wrap');
+            if(timerWrapEl) {
+                if (formConfig.enableTimer) {
+                    timerWrapEl.style.display = 'block';
+                    timerWrapEl.innerHTML = `<div class="inline-flex items-center gap-1.5 font-bold text-sm px-4 py-1.5 rounded-full" style="color: ${themeHex}; background: rgba(${themeRgb}, 0.1);"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> ${String(formConfig.timerMinutes).padStart(2,'0')}:00</div>`;
+                } else {
+                    timerWrapEl.style.display = 'none';
+                }
+            }
+
+            const totalBoxEl = document.getElementById('canvas-total-box'); 
+            let isTotalVisible = false;
+            
+            formFields.forEach(f => { 
+                if(['select', 'radio', 'checkbox'].includes(f.type) && /=\s*(\d+)/.test(f.options)) {
+                    isTotalVisible = true; 
+                }
+            });
+            
+            if(isTotalVisible) { 
+                totalBoxEl.style.display = 'flex'; 
+                document.getElementById('canvas-total-value').style.color = themeHex; 
+                let previewVal = 0; 
+                document.getElementById('canvas-total-value').innerText = 'Rp ' + parseInt(previewVal).toLocaleString('id-ID'); 
+            } else { 
+                totalBoxEl.style.display = 'none'; 
+            }
+            
+            const container = document.getElementById('canvas-fields'); 
+            container.innerHTML = '';
+            
+            formFields.forEach((f) => {
+                const div = document.createElement('div'); 
+                div.className = 'group relative p-4 -mx-4 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200';
+                
+                let inputHtml = '';
+                
+                if(['text', 'tel', 'email', 'number', 'date', 'time'].includes(f.type)) { 
+                    inputHtml = `<input type="${f.type}" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm mt-2 pointer-events-none" placeholder="${f.placeholder}">`; 
+                } else if (f.type === 'textarea') { 
+                    inputHtml = `<textarea class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm mt-2 pointer-events-none resize-none" rows="2" placeholder="${f.placeholder}"></textarea>`; 
+                } else if (f.type === 'select') { 
+                    inputHtml = `<select class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm mt-2 pointer-events-none"><option>Pilih...</option></select>`; 
+                } else if (f.type === 'radio') { 
+                    inputHtml = `<div class="mt-2 space-y-2 pointer-events-none">`; 
+                    (f.options || '').split(',').forEach(o => { 
+                        inputHtml += `<label class="flex items-center gap-2 text-sm text-slate-600"><input type="radio" class="accent-blue-500"> ${o.trim()}</label>`; 
+                    }); 
+                    inputHtml += `</div>`; 
+                } else if (f.type === 'checkbox') { 
+                    inputHtml = `<div class="mt-2 space-y-2 pointer-events-none">`; 
+                    (f.options || '').split(',').forEach(o => { 
+                        inputHtml += `<label class="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" class="accent-blue-500 rounded"> ${o.trim()}</label>`; 
+                    }); 
+                    inputHtml += `</div>`; 
+                }
+
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <input type="text" value="${f.label}" class="font-bold text-sm text-slate-800 bg-transparent outline-none border-b border-transparent focus:border-blue-500 w-2/3" onchange="updateField('${f.id}', 'label', this.value)">
+                        <div class="opacity-0 group-hover:opacity-100 transition flex gap-2">
+                            <select class="text-xs border border-slate-300 rounded px-1.5 py-1 text-slate-600 bg-white" onchange="updateField('${f.id}', 'required', this.value)">
+                                <option value="false" ${!f.required ? 'selected' : ''}>Opsional</option>
+                                <option value="true" ${f.required ? 'selected' : ''}>Wajib *</option>
+                            </select>
+                            <button onclick="removeField('${f.id}')" class="w-7 h-7 rounded bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center">
+                                <i class="ph-bold ph-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    ${['select', 'radio', 'checkbox'].includes(f.type) ? `
+                        <input type="text" value="${f.options}" class="w-full text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1.5 rounded outline-none border border-blue-100 mt-1 mb-2" onchange="updateField('${f.id}', 'options', this.value)" placeholder="Opsi A, Opsi B, Opsi C (Pisahkan dgn koma)">
+                    ` : ''}
+                    ${!['select', 'radio', 'checkbox'].includes(f.type) ? `
+                        <input type="text" value="${f.placeholder}" class="w-full text-xs text-slate-400 bg-transparent outline-none mt-1 mb-1 italic" onchange="updateField('${f.id}', 'placeholder', this.value)" placeholder="Ketik placeholder instruksi...">
+                    ` : ''}
+                    ${inputHtml}
+                `;
+                container.appendChild(div);
+            });
         }
 
         // =========================================================================
@@ -2858,16 +3118,16 @@
             
             let titleTextHtml = '';
             if (formConfig.titleColorType === 'gradient') {
-                titleTextHtml = '<h2 class="im-title" style="background: linear-gradient(135deg, ' + formConfig.titleColor1 + ', ' + formConfig.titleColor2 + '); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">' + formConfig.title + '</h2>\n';
+                titleTextHtml = `<h2 class="im-title" style="background: linear-gradient(135deg, ${formConfig.titleColor1}, ${formConfig.titleColor2}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">${formConfig.title}</h2>\n`;
             } else {
-                titleTextHtml = '<h2 class="im-title" style="color: ' + (formConfig.titleColor1 || '#ffffff') + ';">' + formConfig.title + '</h2>\n';
+                titleTextHtml = `<h2 class="im-title" style="color: ${formConfig.titleColor1 || '#ffffff'};">${formConfig.title}</h2>\n`;
             }
 
             let btnTextHtml = '';
             if (formConfig.ctaTextColorType === 'gradient') {
-                btnTextHtml = '<span style="background: linear-gradient(135deg, ' + formConfig.ctaTextColor1 + ', ' + formConfig.ctaTextColor2 + '); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">' + formConfig.btnText + '</span>';
+                btnTextHtml = `<span style="background: linear-gradient(135deg, ${formConfig.ctaTextColor1}, ${formConfig.ctaTextColor2}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">${formConfig.btnText}</span>`;
             } else {
-                btnTextHtml = '<span style="color: ' + (formConfig.ctaTextColor1 || '#ffffff') + ';">' + formConfig.btnText + '</span>';
+                btnTextHtml = `<span style="color: ${formConfig.ctaTextColor1 || '#ffffff'};">${formConfig.btnText}</span>`;
             }
 
             return `
@@ -3010,9 +3270,9 @@
 `; 
                 let btnTextPopup = formConfig.btnText;
                 if (formConfig.ctaTextColorType === 'gradient') {
-                    btnTextPopup = '<span style="background: linear-gradient(135deg, ' + formConfig.ctaTextColor1 + ', ' + formConfig.ctaTextColor2 + '); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">' + formConfig.btnText + '</span>';
+                    btnTextPopup = `<span style="background: linear-gradient(135deg, ${formConfig.ctaTextColor1}, ${formConfig.ctaTextColor2}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">${formConfig.btnText}</span>`;
                 } else {
-                    btnTextPopup = '<span style="color: ' + (formConfig.ctaTextColor1 || '#ffffff') + ';">' + formConfig.btnText + '</span>';
+                    btnTextPopup = `<span style="color: ${formConfig.ctaTextColor1 || '#ffffff'};">${formConfig.btnText}</span>`;
                 }
 
                 popupWrapperStart = `
