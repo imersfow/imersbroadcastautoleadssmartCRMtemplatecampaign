@@ -2295,41 +2295,6 @@
         // =========================================================================
         // TEMPLATE ENGINE HIBRIDA LOGIC
         // =========================================================================
-        async function initTemplateEngine() {
-            const grid = document.getElementById('template-grid');
-            grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-500"><i class="ph-bold ph-spinner animate-spin text-3xl mb-3 text-blue-500"></i><p>Menarik data template dari server...</p></div>';
-            
-            try {
-                // Fetch Form Templates
-                const resultForm = await fetchWithBackoff(MASTER_SCRIPT_URL + "?action=get_templates");
-                if(resultForm && resultForm.status === 'success') {
-                    availableTemplates = resultForm.data;
-                }
-                
-                // Fetch Sequence Templates
-                const resultSeq = await fetchWithBackoff(MASTER_SCRIPT_URL + "?action=get_sequence_templates");
-                if(resultSeq && resultSeq.status === 'success') {
-                    availableSequenceTemplates = resultSeq.data;
-                }
-
-                // Fetch Broadcast Copywriting Templates
-                const resultBc = await fetchWithBackoff(MASTER_SCRIPT_URL + "?action=get_broadcast_templates");
-                if(resultBc && resultBc.status === 'success') {
-                    availableBroadcastTemplates = resultBc.data;
-                }
-                
-                if(Object.keys(availableTemplates).length > 0) {
-                    renderCategorySidebar();
-                    filterTemplates('Semua');
-                } else {
-                    showTemplateError("Belum ada template di Database Master.");
-                }
-            } catch (error) {
-                console.warn("Fetch Gagal. Detail:", error.message);
-                showTemplateError("Gagal mengambil data! Pastikan Script URL benar dan bisa diakses.");
-            }
-        }
-
         function openTemplateModal() { 
             currentModalType = 'form';
             document.getElementById('template-modal-title').innerText = "Pilih Template Form";
@@ -2358,6 +2323,7 @@
             }
         }
 
+        // --- FUNGSI BARU UNTUK BROADCAST ---
         function openBroadcastTemplateModal() { 
             currentModalType = 'broadcast';
             document.getElementById('template-modal-title').innerText = "Pilih Template Copywriting";
@@ -2399,6 +2365,7 @@
             const sidebar = document.getElementById('category-sidebar');
             let uniqueCategories = new Set();
             
+            // --- UPDATE DATA SOURCE ---
             const dataSource = currentModalType === 'form' ? availableTemplates : (currentModalType === 'sequence' ? availableSequenceTemplates : availableBroadcastTemplates);
             
             for (const key in dataSource) {
@@ -2450,6 +2417,7 @@
                 </div>
             `; 
             
+            // --- UPDATE DATA SOURCE ---
             const dataSource = currentModalType === 'form' ? availableTemplates : (currentModalType === 'sequence' ? availableSequenceTemplates : availableBroadcastTemplates);
             
             for (const key in dataSource) {
@@ -2486,6 +2454,7 @@
                             </div>
                         </div>`;
                     } else if (currentModalType === 'broadcast') {
+                        // --- KARTU KHUSUS BROADCAST COPYWRITING ---
                         html += `
                         <div onclick="useTemplate('${key}')" class="border border-amber-100 rounded-2xl p-6 flex flex-col cursor-pointer hover:border-amber-500 hover:shadow-lg transition bg-white group min-h-[220px] relative overflow-hidden">
                             <div class="w-14 h-14 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform flex-shrink-0">
@@ -2509,6 +2478,7 @@
         function useTemplate(key) {
             closeTemplateModal();
 
+            // --- TAMBAHAN LOGIKA BROADCAST COPYWRITING ---
             if(currentModalType === 'broadcast') {
                 if (key !== 'blank') {
                     const tpl = availableBroadcastTemplates[key];
@@ -2517,7 +2487,7 @@
                 } else {
                     document.getElementById('bc-editor').value = '';
                 }
-                return;
+                return; // Wajib ada return biar gak lanjut ke bawah
             }
             
             if(currentModalType === 'sequence') {
