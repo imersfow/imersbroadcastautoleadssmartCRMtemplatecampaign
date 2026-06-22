@@ -317,7 +317,7 @@
                                     </div>
                                 </div>
 
-                                <!-- 2. Editor Pesan -->
+                               <!-- 2. Editor Pesan -->
                                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                                     <div class="mb-5">
                                         <h3 class="font-bold text-slate-800 text-sm mb-2 flex items-center gap-2"><i class="ph-fill ph-link text-blue-500"></i> URL Media / Lampiran (Opsional)</h3>
@@ -331,7 +331,7 @@
                                             <button onclick="openBroadcastTemplateModal()" class="text-xs bg-amber-50 text-amber-600 hover:bg-amber-100 font-bold px-3 py-1.5 rounded-lg border border-amber-200 transition shadow-sm flex items-center gap-1.5">
                                                 <i class="ph-fill ph-magic-wand text-sm"></i> Load Template
                                             </button>
-                                            <button onclick="insertBcFormat('[Nama]')" class="text-[10px] bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold px-2.5 py-1.5 rounded-lg border border-blue-100 transition shadow-sm">+ [Nama]</button>
+                                            <button onclick="insertBcFormat('[Nama]')" class="text-[10px] bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold px-2.5 py-1.5 rounded-lg border border-blue-100 transition shadow-sm">+ Variabel [Nama]</button>
                                         </div>
                                     </div>
                                     <div class="border border-slate-200 rounded-xl overflow-hidden focus-within:border-blue-500 transition">
@@ -345,7 +345,6 @@
                                         <textarea id="bc-editor" class="w-full h-44 p-4 text-sm outline-none resize-y custom-scrollbar leading-relaxed" placeholder="Halo [Nama], kami sedang ada promo spesial nih..."></textarea>
                                     </div>
                                 </div>
-                            </div>
 
                             <!-- Panel Kanan: Metode & Eksekusi -->
                             <div class="w-full lg:w-[400px] flex-shrink-0 flex flex-col gap-5">
@@ -410,7 +409,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                         </div>
                     </div>
                 </div>
 
@@ -438,7 +437,7 @@
                                     <h3 class="font-bold text-slate-800 text-sm">Timeline Pesan</h3>
                                     <div class="flex gap-2">
                                         <button onclick="openSequenceTemplateModal()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold px-3 py-1.5 rounded-lg transition shadow-sm border border-blue-100 flex items-center gap-1.5">
-                                            <i class="ph-fill ph-magic-wand"></i> Pilih Template
+                                            <i class="ph-fill ph-magic-wand"></i> Load Template
                                         </button>
                                         <button onclick="addSequenceItem()" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-md">+ Tambah Jadwal</button>
                                     </div>
@@ -1058,11 +1057,14 @@
                                     <textarea id="output-code" class="flex-1 w-full bg-transparent text-emerald-400 p-6 font-mono text-[13px] leading-relaxed focus:outline-none resize-none custom-scrollbar" readonly></textarea>
                                 </div>
                                 <div class="flex flex-col sm:flex-row gap-4 mt-auto">
-                                    <button onclick="saveFormToDashboard()" class="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg">
-                                        <i class="ph-bold ph-floppy-disk text-2xl"></i> Simpan & Publish Form
+                                    <button onclick="saveFormToDashboard()" class="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm sm:text-lg">
+                                        <i class="ph-bold ph-floppy-disk text-xl sm:text-2xl"></i> Simpan & Publish Form
                                     </button>
-                                    <button onclick="copyEmbedCode()" class="flex-1 py-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg">
-                                        <i class="ph-bold ph-copy text-2xl"></i> Salin Kode HTML
+                                    <button onclick="savePersonalFormTemplate()" class="flex-1 py-4 bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold rounded-xl shadow-md border border-amber-200 transition flex items-center justify-center gap-2 text-sm sm:text-lg">
+                                        <i class="ph-bold ph-star text-xl sm:text-2xl"></i> Simpan Sebagai Template Saya
+                                    </button>
+                                    <button onclick="copyEmbedCode()" class="flex-1 py-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm sm:text-lg">
+                                        <i class="ph-bold ph-copy text-xl sm:text-2xl"></i> Salin HTML
                                     </button>
                                 </div>
                             </div>
@@ -1166,12 +1168,16 @@
         let savedForms = JSON.parse(localStorage.getItem('imersfow_forms')) || [];
         let currentStep = 1; 
         
-        // VARIABEL TEMPLATE ENGINE HIBRIDA
-        let availableTemplates = {};           // Untuk Template Form
-        let availableSequenceTemplates = {};   // Untuk Template Sequence WA
-        let availableBroadcastTemplates = {};  // Untuk Template Broadcast (Copywriting)
-        let currentModalType = 'form';         // 'form', 'sequence', atau 'broadcast'
+        // VARIABEL TEMPLATE ENGINE HIBRIDA & CRM
+        let availableTemplates = {};           
+        let availableSequenceTemplates = {};   
+        let availableBroadcastTemplates = {};  // <-- MANGKOK BARU BUAT BROADCAST
+        let currentModalType = 'form';         
         let currentCategoryFilter = 'Semua';
+        
+        // Data Sinkronisasi CRM V4.0
+        let masterContactsData = [];
+        let campaignHistoryData = [];
 
         let sequencesData = [
             { 
@@ -1183,10 +1189,6 @@
             }
         ];
         let activeSeqId = sequencesData[0].id;
-
-        // Data Sinkronisasi CRM V4.0
-        let masterContactsData = [];
-        let campaignHistoryData = [];
 
         // =========================================================================
         // HELPER: FETCH DENGAN EXPONENTIAL BACKOFF (Anti-Gagal)
@@ -2301,22 +2303,14 @@
             grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-500"><i class="ph-bold ph-spinner animate-spin text-3xl mb-3 text-blue-500"></i><p>Menarik data template dari server...</p></div>';
             
             try {
-                // Fetch Form Templates
                 const resultForm = await fetchWithBackoff(MASTER_SCRIPT_URL + "?action=get_templates");
                 if(resultForm && resultForm.status === 'success') {
                     availableTemplates = resultForm.data;
                 }
                 
-                // Fetch Sequence Templates
                 const resultSeq = await fetchWithBackoff(MASTER_SCRIPT_URL + "?action=get_sequence_templates");
                 if(resultSeq && resultSeq.status === 'success') {
                     availableSequenceTemplates = resultSeq.data;
-                }
-
-                // Fetch Broadcast Copywriting Templates
-                const resultBc = await fetchWithBackoff(MASTER_SCRIPT_URL + "?action=get_broadcast_templates");
-                if(resultBc && resultBc.status === 'success') {
-                    availableBroadcastTemplates = resultBc.data;
                 }
                 
                 if(Object.keys(availableTemplates).length > 0) {
@@ -2359,6 +2353,7 @@
             }
         }
 
+        // --- FUNGSI BARU UNTUK BROADCAST ---
         function openBroadcastTemplateModal() { 
             currentModalType = 'broadcast';
             document.getElementById('template-modal-title').innerText = "Pilih Template Copywriting";
@@ -2400,6 +2395,7 @@
             const sidebar = document.getElementById('category-sidebar');
             let uniqueCategories = new Set();
             
+            // --- UPDATE DATA SOURCE ---
             const dataSource = currentModalType === 'form' ? availableTemplates : (currentModalType === 'sequence' ? availableSequenceTemplates : availableBroadcastTemplates);
             
             for (const key in dataSource) {
@@ -2408,12 +2404,12 @@
                 }
             }
             
-            let html = `<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3">Kategori</p>`;
-            html += `<button onclick="filterTemplates('Semua')" id="btn-cat-Semua" class="cat-btn text-left px-4 py-2.5 rounded-xl bg-blue-100 text-blue-700 font-bold text-sm transition w-full">Semua Template</button>`;
+            let html = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3">Kategori</p>';
+            html += '<button onclick="filterTemplates(\'Semua\')" id="btn-cat-Semua" class="cat-btn text-left px-4 py-2.5 rounded-xl bg-blue-100 text-blue-700 font-bold text-sm transition w-full">Semua Template</button>';
             
             uniqueCategories.forEach(cat => {
                 const safeId = cat.replace(/[^a-zA-Z0-9]/g, '-');
-                html += `<button onclick="filterTemplates('${cat}')" id="btn-cat-${safeId}" class="cat-btn text-left px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-200 font-medium text-sm transition w-full">${cat}</button>`;
+                html += '<button onclick="filterTemplates(\'' + cat + '\')" id="btn-cat-' + safeId + '" class="cat-btn text-left px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-200 font-medium text-sm transition w-full">' + cat + '</button>';
             });
             sidebar.innerHTML = html;
         }
@@ -2451,6 +2447,7 @@
                 </div>
             `; 
             
+            // --- UPDATE DATA SOURCE ---
             const dataSource = currentModalType === 'form' ? availableTemplates : (currentModalType === 'sequence' ? availableSequenceTemplates : availableBroadcastTemplates);
             
             for (const key in dataSource) {
@@ -2487,6 +2484,7 @@
                             </div>
                         </div>`;
                     } else if (currentModalType === 'broadcast') {
+                        // --- KARTU KHUSUS BROADCAST COPYWRITING ---
                         html += `
                         <div onclick="useTemplate('${key}')" class="border border-amber-100 rounded-2xl p-6 flex flex-col cursor-pointer hover:border-amber-500 hover:shadow-lg transition bg-white group min-h-[220px] relative overflow-hidden">
                             <div class="w-14 h-14 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform flex-shrink-0">
@@ -2510,6 +2508,7 @@
         function useTemplate(key) {
             closeTemplateModal();
 
+            // --- TAMBAHAN LOGIKA BROADCAST COPYWRITING ---
             if(currentModalType === 'broadcast') {
                 if (key !== 'blank') {
                     const tpl = availableBroadcastTemplates[key];
@@ -2518,7 +2517,7 @@
                 } else {
                     document.getElementById('bc-editor').value = '';
                 }
-                return;
+                return; // Wajib ada return biar gak lanjut ke bawah
             }
             
             if(currentModalType === 'sequence') {
@@ -2623,6 +2622,236 @@
 
             switchTab('builder'); 
             goToStep(1);
+        }
+
+        // =========================================================================
+        // FORM BUILDER LOGIC
+        // =========================================================================
+        function goToStep(step) {
+            currentStep = step; 
+            document.getElementById('progress-bar').style.width = ((step - 1) / 3) * 100 + '%';
+            
+            document.querySelectorAll('.step-btn').forEach(btn => {
+                const s = parseInt(btn.getAttribute('data-step')); 
+                const circle = btn.querySelector('.step-circle');
+                
+                if (s <= step) { 
+                    circle.classList.add('bg-rose-500', 'text-white', 'border-rose-500'); 
+                    circle.classList.remove('bg-white', 'text-slate-400', 'border-slate-300'); 
+                } else { 
+                    circle.classList.remove('bg-rose-500', 'text-white', 'border-rose-500'); 
+                    circle.classList.add('bg-white', 'text-slate-400', 'border-slate-300'); 
+                }
+            });
+            
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('step-' + i);
+                if (i === step) { 
+                    el.style.transform = 'translateX(0)'; 
+                    el.style.opacity = '1'; 
+                    el.style.pointerEvents = 'auto'; 
+                    el.style.zIndex = '10'; 
+                } else if (i < step) { 
+                    el.style.transform = 'translateX(-100%)'; 
+                    el.style.opacity = '0'; 
+                    el.style.pointerEvents = 'none'; 
+                    el.style.zIndex = '0'; 
+                } else { 
+                    el.style.transform = 'translateX(100%)'; 
+                    el.style.opacity = '0'; 
+                    el.style.pointerEvents = 'none'; 
+                    el.style.zIndex = '0'; 
+                }
+            }
+            
+            if(step === 2) renderCanvas(); 
+            if(step === 3) renderPreview(); 
+            if(step === 4) generateCode();
+        }
+
+        function generateId() { 
+            return 'f_' + Math.random().toString(36).substr(2, 6); 
+        }
+        
+        function getFieldLabelText(type) { 
+            const dict = { 
+                'text':'Teks Pendek', 'tel':'No. WhatsApp', 'email':'Alamat Email', 
+                'number':'Angka/Qty', 'textarea':'Alamat Lengkap', 'select':'Pilih Dropdown', 
+                'date':'Tanggal', 'time':'Waktu', 'radio':'Pilihan Tunggal', 'checkbox':'Pilihan Banyak' 
+            }; 
+            return dict[type] || 'Field Baru'; 
+        }
+
+        function addField(type) {
+            let field = { 
+                id: generateId(), 
+                type: type, 
+                label: getFieldLabelText(type), 
+                required: false, 
+                placeholder: '' 
+            };
+            
+            if(['select', 'radio', 'checkbox'].includes(type)) {
+                field.options = 'Opsi A, Opsi B, Opsi C';
+            }
+            
+            formFields.push(field); 
+            renderCanvas();
+            
+            setTimeout(() => { 
+                const wrap = document.getElementById('step-2').querySelector('.flex-1'); 
+                wrap.scrollTo({ top: wrap.scrollHeight, behavior: 'smooth' }); 
+            }, 100);
+        }
+
+        function removeField(id) { 
+            formFields = formFields.filter(f => f.id !== id); 
+            renderCanvas(); 
+        }
+        
+        function updateField(id, key, value) { 
+            const field = formFields.find(f => f.id === id); 
+            if(field) { 
+                if(key === 'required') {
+                    field[key] = value === 'true'; 
+                } else {
+                    field[key] = value; 
+                }
+            } 
+            if(key === 'options') {
+                renderCanvas(); 
+            }
+        }
+
+        function renderCanvas() {
+            document.getElementById('canvas-header').style.background = formConfig.headerBg; 
+            document.getElementById('canvas-btn').style.background = formConfig.ctaBg;
+            
+            const titleEl = document.getElementById('canvas-title');
+            titleEl.innerText = formConfig.title;
+            if (formConfig.titleColorType === 'gradient') {
+                titleEl.style.background = `linear-gradient(135deg, ${formConfig.titleColor1}, ${formConfig.titleColor2})`;
+                titleEl.style.webkitBackgroundClip = 'text';
+                titleEl.style.webkitTextFillColor = 'transparent';
+                titleEl.style.color = 'transparent';
+            } else {
+                titleEl.style.background = 'none';
+                titleEl.style.webkitBackgroundClip = 'initial';
+                titleEl.style.webkitTextFillColor = 'initial';
+                titleEl.style.color = formConfig.titleColor1 || '#ffffff';
+            }
+
+            const ctaEl = document.getElementById('canvas-btn');
+            if (formConfig.ctaTextColorType === 'gradient') {
+                ctaEl.innerHTML = `<span style="background: linear-gradient(135deg, ${formConfig.ctaTextColor1}, ${formConfig.ctaTextColor2}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">${formConfig.btnText}</span>`;
+            } else {
+                ctaEl.innerHTML = `<span style="color: ${formConfig.ctaTextColor1 || '#ffffff'};">${formConfig.btnText}</span>`;
+            }
+            
+            const logoEl = document.getElementById('canvas-logo'); 
+            if(formConfig.logoUrl) { 
+                logoEl.src = formConfig.logoUrl; 
+                logoEl.style.display = 'block'; 
+            } else { 
+                logoEl.style.display = 'none'; 
+            }
+            
+            const themeHex = getThemeColor(); 
+            const themeRgb = hexToRgb(themeHex);
+            
+            const trustEl = document.getElementById('canvas-trust'); 
+            if(formConfig.trustBadge) { 
+                trustEl.style.display = 'flex'; 
+                trustEl.style.backgroundColor = `rgba(${themeRgb}, 0.08)`; 
+                trustEl.style.borderColor = `rgba(${themeRgb}, 0.2)`; 
+                document.getElementById('canvas-trust-title').style.color = themeHex; 
+                document.getElementById('canvas-trust-icon').style.color = themeHex; 
+                document.getElementById('canvas-trust-title').innerText = formConfig.trustTitle; 
+                document.getElementById('canvas-trust-desc').innerText = formConfig.trustDesc; 
+            } else { 
+                trustEl.style.display = 'none'; 
+            }
+            
+            const timerWrapEl = document.getElementById('canvas-timer-wrap');
+            if(timerWrapEl) {
+                if (formConfig.enableTimer) {
+                    timerWrapEl.style.display = 'block';
+                    timerWrapEl.innerHTML = `<div class="inline-flex items-center gap-1.5 font-bold text-sm px-4 py-1.5 rounded-full" style="color: ${themeHex}; background: rgba(${themeRgb}, 0.1);"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> ${String(formConfig.timerMinutes).padStart(2,'0')}:00</div>`;
+                } else {
+                    timerWrapEl.style.display = 'none';
+                }
+            }
+
+            const totalBoxEl = document.getElementById('canvas-total-box'); 
+            let isTotalVisible = false;
+            
+            formFields.forEach(f => { 
+                if(['select', 'radio', 'checkbox'].includes(f.type) && /=\s*(\d+)/.test(f.options)) {
+                    isTotalVisible = true; 
+                }
+            });
+            
+            if(isTotalVisible) { 
+                totalBoxEl.style.display = 'flex'; 
+                document.getElementById('canvas-total-value').style.color = themeHex; 
+                let previewVal = 0; 
+                document.getElementById('canvas-total-value').innerText = 'Rp ' + parseInt(previewVal).toLocaleString('id-ID'); 
+            } else { 
+                totalBoxEl.style.display = 'none'; 
+            }
+            
+            const container = document.getElementById('canvas-fields'); 
+            container.innerHTML = '';
+            
+            formFields.forEach((f) => {
+                const div = document.createElement('div'); 
+                div.className = 'group relative p-4 -mx-4 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200';
+                
+                let inputHtml = '';
+                
+                if(['text', 'tel', 'email', 'number', 'date', 'time'].includes(f.type)) { 
+                    inputHtml = `<input type="${f.type}" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm mt-2 pointer-events-none" placeholder="${f.placeholder}">`; 
+                } else if (f.type === 'textarea') { 
+                    inputHtml = `<textarea class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm mt-2 pointer-events-none resize-none" rows="2" placeholder="${f.placeholder}"></textarea>`; 
+                } else if (f.type === 'select') { 
+                    inputHtml = `<select class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm mt-2 pointer-events-none"><option>Pilih...</option></select>`; 
+                } else if (f.type === 'radio') { 
+                    inputHtml = `<div class="mt-2 space-y-2 pointer-events-none">`; 
+                    (f.options || '').split(',').forEach(o => { 
+                        inputHtml += `<label class="flex items-center gap-2 text-sm text-slate-600"><input type="radio" class="accent-blue-500"> ${o.trim()}</label>`; 
+                    }); 
+                    inputHtml += `</div>`; 
+                } else if (f.type === 'checkbox') { 
+                    inputHtml = `<div class="mt-2 space-y-2 pointer-events-none">`; 
+                    (f.options || '').split(',').forEach(o => { 
+                        inputHtml += `<label class="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" class="accent-blue-500 rounded"> ${o.trim()}</label>`; 
+                    }); 
+                    inputHtml += `</div>`; 
+                }
+
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <input type="text" value="${f.label}" class="font-bold text-sm text-slate-800 bg-transparent outline-none border-b border-transparent focus:border-blue-500 w-2/3" onchange="updateField('${f.id}', 'label', this.value)">
+                        <div class="opacity-0 group-hover:opacity-100 transition flex gap-2">
+                            <select class="text-xs border border-slate-300 rounded px-1.5 py-1 text-slate-600 bg-white" onchange="updateField('${f.id}', 'required', this.value)">
+                                <option value="false" ${!f.required ? 'selected' : ''}>Opsional</option>
+                                <option value="true" ${f.required ? 'selected' : ''}>Wajib *</option>
+                            </select>
+                            <button onclick="removeField('${f.id}')" class="w-7 h-7 rounded bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center">
+                                <i class="ph-bold ph-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    ${['select', 'radio', 'checkbox'].includes(f.type) ? `
+                        <input type="text" value="${f.options}" class="w-full text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1.5 rounded outline-none border border-blue-100 mt-1 mb-2" onchange="updateField('${f.id}', 'options', this.value)" placeholder="Opsi A, Opsi B, Opsi C (Pisahkan dgn koma)">
+                    ` : ''}
+                    ${!['select', 'radio', 'checkbox'].includes(f.type) ? `
+                        <input type="text" value="${f.placeholder}" class="w-full text-xs text-slate-400 bg-transparent outline-none mt-1 mb-1 italic" onchange="updateField('${f.id}', 'placeholder', this.value)" placeholder="Ketik placeholder instruksi...">
+                    ` : ''}
+                    ${inputHtml}
+                `;
+                container.appendChild(div);
+            });
         }
 
         // =========================================================================
